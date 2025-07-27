@@ -3,4 +3,9 @@ name = "git-package-consumer"
 version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "git-package-flat",
+]
+
+[tool.uv.sources]
+git-package-flat = { git = "https://github.com/ton77v/git_package__flat" }
