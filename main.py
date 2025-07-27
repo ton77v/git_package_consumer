@@ -1,4 +1,4 @@
-from git_package.start_dev import start_dev
+from git_package import start_dev
 
 
 def main() -> int:
