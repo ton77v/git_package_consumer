@@ -62,7 +62,7 @@ requires-dist = [{ name = "git-package-flat", git = "https://github.com/ton77v/g
 [[package]]
 name = "git-package-flat"
 version = "0.1.0"
-source = { git = "https://github.com/ton77v/git_package__flat.git?rev=src_folder#b81f9864559c70ff572f9c067a575821804d20bc" }
+source = { git = "https://github.com/ton77v/git_package__flat.git?rev=src_folder#bc88ad3b549aac35c79d73753b08f5b7ae0d9568" }
 dependencies = [
     { name = "flask" },
 ]
