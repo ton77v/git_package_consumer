@@ -8,4 +8,4 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-git-package-flat = { git = "https://github.com/ton77v/git_package__flat.git", rev = "src_folder" }
+git-package-flat = { git = "https://github.com/ton77v/git_package__flat.git", rev = "src_folder_hacks" }
