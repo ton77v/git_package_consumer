@@ -1,0 +1,12 @@
+name: Some other checks
+
+on:
+  workflow_dispatch:
+
+jobs:
+  set_up:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        run: echo "si"
