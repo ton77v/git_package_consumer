@@ -1,0 +1,16 @@
+name: Tests and Checkups for customer_portal consumer
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  set_up:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        run: echo "hello"
