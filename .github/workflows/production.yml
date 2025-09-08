@@ -1,0 +1,16 @@
+name: Prod deployment n shit
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  set_up:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        run: echo "word"
