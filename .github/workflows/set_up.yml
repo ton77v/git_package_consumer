@@ -5,13 +5,13 @@ on:
     outputs:
       branch_name:
         description: "Name of the active branch"
-        value: ${{ jobs.set_up.outputs.branch_name}}
+        value: ${{ jobs.setup.outputs.branch_name}}
       repo_slug:
         description: "Name of the project repository"
-        value: ${{ jobs.set_up.outputs.repo_slug}}
+        value: ${{ jobs.setup.outputs.repo_slug}}
       cache-hit:
         description: "If the cache was hit; standard one"
-        value: ${{ jobs.set_up.outputs.cache-hit}}
+        value: ${{ jobs.setup.outputs.cache-hit}}
       # we can't use the cache_dir from shared workflow since it runs @ own container
       # so instead we upload is as `uv-cache` artifact
 
