@@ -27,8 +27,14 @@ jobs:
       - name: Check disk space
         run: df -h
 
-      - name: Delete huge unnecessary tools folder
-        run: rm -rf /opt/hostedtoolcache
+      #      # FREES 5GB @ FS /dev/root
+      #      - name: Delete huge unnecessary tools folder
+      #        run: rm -rf /opt/hostedtoolcache
+
+      - name: Delete huge unnecessary folders
+        run: |
+          cd /opt
+          find . -maxdepth 1 -mindepth 1 '!' -path ./containerd '!' -path ./actionarchivecache '!' -path ./runner '!' -path ./runner-cache -exec rm -rf '{}' ';'
 
       - name: Check disk space
         run: df -h
