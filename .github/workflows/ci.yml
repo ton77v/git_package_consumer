@@ -31,10 +31,20 @@ jobs:
       #      - name: Delete huge unnecessary tools folder
       #        run: rm -rf /opt/hostedtoolcache
 
+      # FREES 7GB @ FS /dev/root
       - name: Delete huge unnecessary folders
         run: |
           cd /opt
           find . -maxdepth 1 -mindepth 1 '!' -path ./containerd '!' -path ./actionarchivecache '!' -path ./runner '!' -path ./runner-cache -exec rm -rf '{}' ';'
+
+      - name: Check disk space
+        run: df -h
+
+      - name: Extra clean-up
+        run: |
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          rm -rf ~/.conda/pkgs/*
 
       - name: Check disk space
         run: df -h
