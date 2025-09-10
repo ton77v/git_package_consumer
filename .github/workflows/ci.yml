@@ -23,3 +23,12 @@ jobs:
 
       - name: Print cache-hit
         run: echo ${{ needs.set_up.outputs.cache-hit }}
+
+      - name: Check disk space
+        run: df -h
+
+      - name: Delete huge unnecessary tools folder
+        run: rm -rf /opt/hostedtoolcache
+
+      - name: Check disk space
+        run: df -h
