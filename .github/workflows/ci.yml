@@ -1,4 +1,4 @@
-name: Tests and Checkups for customer_portal consumer
+name: Checking the output of reusable workflow
 
 on:
   push:
@@ -9,8 +9,43 @@ on:
 
 jobs:
   set_up:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/set_up.yml
 
+  deploy:
+    runs-on: ubuntu-latest
+    needs: set_up
     steps:
-      - name: Checkout
-        run: echo "hello"
+      - name: Print branch_name
+        run: echo ${{ needs.set_up.outputs.repo_slug }}
+
+      - name: Print repo_slug
+        run: echo ${{ needs.set_up.outputs.repo_slug }}
+
+      - name: Print cache-hit
+        run: echo ${{ needs.set_up.outputs.cache-hit }}
+
+      - name: Check disk space
+        run: df -h
+
+      #      # FREES 5GB @ FS /dev/root
+      #      - name: Delete huge unnecessary tools folder
+      #        run: rm -rf /opt/hostedtoolcache
+
+      # FREES 7GB @ FS /dev/root
+      - name: Delete huge unnecessary folders
+        run: |
+          cd /opt
+          find . -maxdepth 1 -mindepth 1 '!' -path ./containerd '!' -path ./actionarchivecache '!' -path ./runner '!' -path ./runner-cache -exec rm -rf '{}' ';'
+
+      - name: Check disk space
+        run: df -h
+
+      # about 1GB @ FS /dev/root
+      - name: Extra clean-up
+        run: |
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          rm -rf ~/.conda/pkgs/*
+
+      - name: Check disk space
+        run: df -h
