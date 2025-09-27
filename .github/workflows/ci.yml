@@ -40,6 +40,7 @@ jobs:
       - name: Check disk space
         run: df -h
 
+      # about 1GB @ FS /dev/root
       - name: Extra clean-up
         run: |
           sudo apt-get clean
