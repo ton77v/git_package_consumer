@@ -1,0 +1,94 @@
+name: PR Review with Qodo PR Agent
+on:
+  pull_request:
+    # types: [opened, synchronize, labeled, unlabeled]  # will trigger @ every change | won't review ⚠️
+    types: [opened, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  pr_agent_job:
+    name: Run PR Agent action; describes PR, reviews it, updates the changelog and replies to comments
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.sender.type != 'Bot' &&
+        github.event.pull_request.draft == false
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: write
+    env:
+      # we do some steps just when we open the PR or promote draft one to ready
+      RUN_ON_DEMAND: ${{ github.event_name == 'workflow_dispatch' }}
+      PR_STARTED: ${{ github.event_name == 'pull_request' &&
+        (github.event.action == 'opened' ||
+        github.event.action == 'ready_for_review') }}
+      # ---- config for the PR Agent ----
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+      # https://docs.litellm.ai/docs/providers
+      CONFIG__MODEL: "deepseek/deepseek-chat"
+      CONFIG__CUSTOM_MODEL_MAX_TOKENS: "64000"
+      OPENAI__API_BASE: "https://api.deepseek.com"
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      reviewer_custom_prompt: |
+        FINALLY: As an expert, principled senior software engineer, is there anything we can do - in the scope of this PR - 
+        to this project to make it easier and cleaner for the next developer?
+        In terms of DRY, dead code or code duplication, anti-patterns, bad abstractions, too long files/functions?
+        Think hard about this, step back for a while and Identify the top things that could be addressed.
+      changelog_instructions: |
+        Follow this format:
+        - title: (DATE) [version_from_pyproject.toml](https://_PR_LINK_)
+        - body should ONLY contain bullets of changes, no additional texts like "Added", etc
+        - start the bullet with emoji: 🚀 rocket for the new feature 🐞 bug for bugfix 
+        🔥 fire for improvement 📄 paper for documentation-related 
+        🧪 for refactoring or extra tests and 🚨 alarm for vulnerability fix
+
+    steps:
+      - name: Trigger PR Agent action step
+        id: pragent
+        uses: qodo-ai/pr-agent@main
+        env:
+          # ... tokens etc comes from job
+          # https://qodo-merge-docs.qodo.ai/tools/review/#configuration-options
+          pr_reviewer.num_max_findings: 5
+          pr_reviewer.require_score_review: true
+          pr_reviewer.extra_instructions: ${{ env.reviewer_custom_prompt }}
+          # there also are e.g. require_ticket_analysis_review for Jira links, etc
+          pr_update_changelog.extra_instructions: ${{ env.changelog_instructions }}
+
+      - name: Update changelog
+        if: ${{ env.RUN_ON_DEMAND == 'true' || env.PR_STARTED == 'true' }}
+        run: |
+          docker run --rm --name pr_agent \
+              -e CONFIG__MODEL=${{ env.CONFIG__MODEL }} \
+              -e CONFIG__CUSTOM_MODEL_MAX_TOKENS=${{ env.CONFIG__CUSTOM_MODEL_MAX_TOKENS }} \
+              -e OPENAI__API_BASE=${{ env.OPENAI__API_BASE }} \
+              -e DEEPSEEK_API_KEY=${{ env.DEEPSEEK_API_KEY }} \
+              -e GITHUB__USER_TOKEN=${{ env.GITHUB_TOKEN }} \
+              -e pr_update_changelog.push_changelog_changes=true \
+              -e pr_update_changelog.extra_instructions="${{ env.changelog_instructions }}" \
+              codiumai/pr-agent:latest \
+              --pr_url ${{ github.event.pull_request.html_url }} update_changelog
+
+      - name: Comment on PR with instructions
+        if: ${{ env.PR_STARTED == 'true' }}
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: process.env.INSTRUCTIONS
+            });
+        env:
+          INSTRUCTIONS: |
+            Ask a question to PR Agent using `/ask` "..." command 💬
+            
+            Use `/help` to get all the commands available
