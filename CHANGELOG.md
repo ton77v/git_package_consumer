@@ -1,3 +1,7 @@
+## (2025-12-19) [0.1.0](https://github.com/ton77v/git_package_consumer/pull/4)
+
+📄 Updated README with introductory section clarifying repository purpose
+
 ## (2025-12-19) [0.1.0](https://github.com/ton77v/git_package_consumer/pull/3)
 
 🚀 Added automated PR review workflow using Qodo PR Agent
