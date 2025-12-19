@@ -35,6 +35,13 @@ jobs:
       CONFIG__CUSTOM_MODEL_MAX_TOKENS: "64000"
       OPENAI__API_BASE: "https://api.deepseek.com"
       DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      PR_AGENT_DOCKER_RUN_ENVS: |
+        docker run --rm --name pr_agent
+        -e CONFIG__MODEL=${{ env.CONFIG__MODEL }}
+        -e CONFIG__CUSTOM_MODEL_MAX_TOKENS=${{ env.CONFIG__CUSTOM_MODEL_MAX_TOKENS }}
+        -e OPENAI__API_BASE=${{ env.OPENAI__API_BASE }}
+        -e DEEPSEEK_API_KEY=${{ env.DEEPSEEK_API_KEY }}
+        -e GITHUB__USER_TOKEN=${{ env.GITHUB_TOKEN }}
       reviewer_custom_prompt: |
         FINALLY: As an expert, principled senior software engineer, is there anything we can do - in the scope of this PR - 
         to this project to make it easier and cleaner for the next developer?
@@ -49,7 +56,10 @@ jobs:
         🧪 for refactoring or extra tests and 🚨 alarm for vulnerability fix
 
     steps:
+      # 📝 that when we run event on demand, the Agent won't do stuff <prob because of context missing>
+      # so the most reliable workaround is to run this action explicitly @ on-demand executions
       - name: Trigger PR Agent action step
+        if: ${{ env.RUN_ON_DEMAND != 'true' }}
         id: pragent
         uses: qodo-ai/pr-agent@main
         env:
@@ -83,15 +93,20 @@ jobs:
 
           echo "PR_URL=$PR_URL" >> "$GITHUB_ENV"
 
+      - name: PR review when run on demand
+        if: ${{ env.RUN_ON_DEMAND == 'true' }}
+        run: |
+          ${{ env.PR_AGENT_DOCKER_RUN_ENVS }} \
+              -e pr_reviewer.extra_instructions="${{ env.reviewer_custom_prompt }}" \
+              -e pr_reviewer.num_max_findings=5 \
+              -e pr_reviewer.require_score_review=true \
+              codiumai/pr-agent:latest \
+              --pr_url ${{ env.PR_URL }} review
+
       - name: Update changelog
         if: ${{ env.RUN_ON_DEMAND == 'true' || env.PR_STARTED == 'true' }}
         run: |
-          docker run --rm --name pr_agent \
-              -e CONFIG__MODEL=${{ env.CONFIG__MODEL }} \
-              -e CONFIG__CUSTOM_MODEL_MAX_TOKENS=${{ env.CONFIG__CUSTOM_MODEL_MAX_TOKENS }} \
-              -e OPENAI__API_BASE=${{ env.OPENAI__API_BASE }} \
-              -e DEEPSEEK_API_KEY=${{ env.DEEPSEEK_API_KEY }} \
-              -e GITHUB__USER_TOKEN=${{ env.GITHUB_TOKEN }} \
+          ${{ env.PR_AGENT_DOCKER_RUN_ENVS }} \
               -e pr_update_changelog.push_changelog_changes=true \
               -e pr_update_changelog.extra_instructions="${{ env.changelog_instructions }}" \
               codiumai/pr-agent:latest \
