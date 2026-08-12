@@ -1,1 +1,21 @@
-exit 1
+name: Manual exit code
+
+on:
+  workflow_dispatch:
+    inputs:
+      exit_code:
+        description: "Exit code for this run"
+        required: false
+        default: "1"
+        type: choice
+        options:
+          - "1"
+          - "0"
+
+jobs:
+  exit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exit with requested code
+        shell: bash
+        run: exit "${{ inputs.exit_code }}"
