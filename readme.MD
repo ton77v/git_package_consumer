@@ -1,3 +1,11 @@
+# Testing Package vs Consumer
+
+And various GH Actions-related stuff
+
+- like at the moment there's also LLM review activated
+
+# Getting started
+
 Installation:
 
 ```shell
